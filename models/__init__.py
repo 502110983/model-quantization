@@ -13,7 +13,7 @@ try:
     #from .nin_ import nin as nin_
     #from .vgg_small_ import vgg_small
     
-    #from .mobilenet import mobilenetv2, mobilenetv1
+    from .mobilenet import mobilenetv2, mobilenetv1
     #from .densenet import densenet121
     #from .nasnet import nasnet
     #from .squeezenet import squeezenet
@@ -126,7 +126,7 @@ def get_model(args):
         return vgg_small(args), args
 
     elif args.model == 'nin':
-        return nin_(args), args
+        return nin_(args=args), args
 
     elif args.model == 'pytorch-resnet18':
         model = pytorch_resnet18(pretrained=False, progress=True, args=args)

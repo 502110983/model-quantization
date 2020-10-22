@@ -2,6 +2,46 @@
 import torch
 import torch.nn as nn
 
+def seq_c_b_a_s(x, conv, relu, bn, skip=None, skip_enable=False):
+    out = conv(x)
+    out = bn(out)
+    out = relu(out)
+    if skip_enable:
+        out += skip
+    return out
+
+def seq_c_b_s_a(x, conv, relu, bn, skip=None, skip_enable=False):
+    out = conv(x)
+    out = bn(out)
+    if skip_enable:
+        out += skip
+    out = relu(out)
+    return out
+
+def seq_c_a_b_s(x, conv, relu, bn, skip=None, skip_enable=False):
+    out = conv(x)
+    out = relu(out)
+    out = bn(out)
+    if skip_enable:
+        out += skip
+    return out
+
+def seq_b_c_a_s(x, conv, relu, bn, skip=None, skip_enable=False):
+    out = bn(x)
+    out = conv(out)
+    out = relu(out)
+    if skip_enable:
+        out += skip
+    return out
+
+def seq_b_a_c_s(x, conv, relu, bn, skip=None, skip_enable=False):
+    out = bn(x)
+    out = relu(out)
+    out = conv(out)
+    if skip_enable:
+        out += skip
+    return out
+
 class SliceBN(nn.Module):
     def __init__(self, channel, group):
         super(SliceBN, self).__init__()
@@ -70,15 +110,6 @@ def norm(channel, args=None, feature_stride=None):
         group = getattr(args, "fm_quant_group", 2)
         return nn.GroupNorm(group, channel)
 
-    if 'spatial' in keyword:
-        quant_group = getattr(args, 'fm_quant_group', None)
-        if quant_group is None or feature_stride is None:
-            return nn.BatchNorm2d(channel)
-
-        quant_group = quant_group // feature_stride
-        quant_group = 1 if quant_group < 1 else quant_group
-        return SliceBN(channel, group=quant_group)
-
     if "static-bn" in keyword:
         return StaticBatchNorm2d(channel)
 
@@ -86,18 +117,6 @@ def norm(channel, args=None, feature_stride=None):
         return FrozenBatchNorm2d(channel)
 
     return nn.BatchNorm2d(channel)
-
-class EnchanceReLU(nn.ReLU):
-    def __init__(self, args):
-        super(EnchanceReLU, self).__init__(inplace=True)
-        self.shift = getattr(args, 'fm_boundary', 0.25)
-
-    def forward(self, x):
-        x = x + self.shift
-        x = super(EnchanceReLU, self).forward(x)
-        x = x - self.shift
-        return x
-
 
 def actv(args=None):
     keyword = None
@@ -112,9 +131,6 @@ def actv(args=None):
 
     if 'NReLU' in keyword:
         return nn.Sequential()
-
-    if 'enhance-info' in keyword:
-        return EnchanceReLU(args)
 
     return nn.ReLU(inplace=True)
 

@@ -5,7 +5,6 @@ import numpy as np
 
 from .quant import conv3x3, conv1x1
 from .layers import norm, actv
-from .prone import qprone
 
 # double_channel_half_resolution
 class DCHR(nn.Module):
